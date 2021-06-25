@@ -3,11 +3,11 @@
 [ECCV'20] [Self-supervision with Superpixels: Training Few-shot Medical Image Segmentation without Annotation](https://arxiv.org/abs/2007.09886v2)
 
 
-**Hints**:
+### Hints:
 
-Decompress data.zip file.
+Decompress data.zip
 
-Run ./runner.ipynb.
+Run runner.ipynb
 
 **Abstract**:
 
