@@ -354,7 +354,6 @@ modules.xml
 data/
 exps/
 pretrained_model/
-.idea/
 
 # Pyre type checker
 .pyre/
