@@ -257,7 +257,7 @@ class SuperpixelDataset(BaseDataset):
         def next_sclice_supix(sp, pl, threshold):
             '''
             sp:  super pixel (binary mask)
-            pl:  psuedo label
+            pl:  pseudo label
             '''
             assert sp.shape == pl.shape
             flatten = np.vectorize(lambda x: 1 if x > 0 else x)
