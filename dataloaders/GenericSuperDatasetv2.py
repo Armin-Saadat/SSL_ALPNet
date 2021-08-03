@@ -9,6 +9,7 @@ import torch
 import copy
 import json
 import re
+import pandas as pd
 from dataloaders.common import BaseDataset
 from dataloaders.dataset_utils import *
 from util.utils import CircularList
@@ -235,79 +236,98 @@ class SuperpixelDataset(BaseDataset):
 
         return np.float32(super_map == bi_val)
 
+    def next_sclice_supix(self, super_pix, pseudo_lables):
+        """
+        sp:  super pixel (binary mask)
+        pl:  pseudo label
+        """
+        assert super_pix.shape == pseudo_lables.shape
+        flatten = np.vectorize(lambda x: 1 if x > 0 else x)
+        unique = pd.Series(pseudo_lables.ravel()).unique()
+        best_match = None
+        best_score = 0
+        for pix in unique:
+            msk = np.multiply(pseudo_lables, pseudo_lables == pix)
+            intersection = np.multiply(super_pix, msk)
+            union = flatten(super_pix + msk).sum()
+            score = intersection / union
+            if score >= best_score:
+                best_score = score
+                best_match = msk
+        return best_match, best_score
+
+    def create_sample(self, comp, sample_dict):
+        img, lb = self.transforms(comp, c_img=1, c_label=1, nclass=self.nclass, is_train=True, use_onehot=False)
+
+        img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
+        lb = torch.from_numpy(lb.squeeze(-1))
+
+        if self.tile_z_dim:
+            img = img.repeat([self.tile_z_dim, 1, 1])
+            assert img.ndimension() == 3, f'actual dim {img.ndimension()}'
+
+        is_start = sample_dict["is_start"]
+        is_end = sample_dict["is_end"]
+        nframe = np.int32(sample_dict["nframe"])
+        scan_id = sample_dict["scan_id"]
+        z_id = sample_dict["z_id"]
+
+        sample = {"image": img,
+                  "label": lb,
+                  "is_start": is_start,
+                  "is_end": is_end,
+                  "nframe": nframe,
+                  "scan_id": scan_id,
+                  "z_id": z_id
+                  }
+
+        # Add auxiliary attributes
+        if self.aux_attrib is not None:
+            for key_prefix in self.aux_attrib:
+                # Process the data sample, create new attributes and save them in a dictionary
+                aux_attrib_val = self.aux_attrib[key_prefix](sample, **self.aux_attrib_args[key_prefix])
+                for key_suffix in aux_attrib_val:
+                    # one function may create multiple attributes, so we need suffix to distinguish them
+                    sample[key_prefix + '_' + key_suffix] = aux_attrib_val[key_suffix]
+
+        return sample
+
     def __getitem__(self, index):
         index = index % len(self.actual_dataset)
         curr_dict = self.actual_dataset[index]
         sup_max_cls = curr_dict['sup_max_cls']
-        if sup_max_cls < 1:
+        if sup_max_cls < 1 or curr_dict["is_end"]:
             return self.__getitem__(index + 1)
-
-        image_t = curr_dict["img"]
-        label_raw = curr_dict["lb"]
 
         for _ex_cls in self.exclude_lbs:
             if curr_dict["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][curr_dict[
                 "scan_id"]]:  # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
                 return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
+        next_dict = self.actual_dataset[index + 1]
+
+        for _ex_cls in self.exclude_lbs:
+            if next_dict["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][next_dict[
+                "scan_id"]]:  # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
+                return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
+
+        image_t = curr_dict["img"]
+        label_raw = curr_dict["lb"]
+
+        image_t_next = next_dict["img"]
+        label_raw_next = next_dict["lb"]
+
         label_t = self.supcls_pick_binarize(label_raw, sup_max_cls)
+        label_t_next, matching_score = self.next_sclice_supix(label_t, label_raw_next)
 
-        pair_buffer = []
-
-        def next_sclice_supix(sp, pl, threshold):
-            '''
-            sp:  super pixel (binary mask)
-            pl:  pseudo label
-            '''
-            assert sp.shape == pl.shape
-            flatten = np.vectorize(lambda x: 1 if x > 0 else x)
-            unique = pd.Series(pl.ravel()).unique()
-            for pix in unique:
-                msk = np.multiply(pl, pl==pix)
-                intersection = np.multiply(sp, msk)
-                union = flatten(sp + msk).sum()
-                score = intersection / union
-                if score >= threshold:
-                    return msk, score
-            return None, None
-
-
-        comp = np.concatenate([image_t, label_t], axis=-1)
-
-        for ii in range(self.num_rep):
-            img, lb = self.transforms(comp, c_img=1, c_label=1, nclass=self.nclass, is_train=True, use_onehot=False)
-
-            img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
-            lb = torch.from_numpy(lb.squeeze(-1))
-
-            if self.tile_z_dim:
-                img = img.repeat([self.tile_z_dim, 1, 1])
-                assert img.ndimension() == 3, f'actual dim {img.ndimension()}'
-
-            is_start = curr_dict["is_start"]
-            is_end = curr_dict["is_end"]
-            nframe = np.int32(curr_dict["nframe"])
-            scan_id = curr_dict["scan_id"]
-            z_id = curr_dict["z_id"]
-
-            sample = {"image": img,
-                      "label": lb,
-                      "is_start": is_start,
-                      "is_end": is_end,
-                      "nframe": nframe,
-                      "scan_id": scan_id,
-                      "z_id": z_id
-                      }
-
-            # Add auxiliary attributes
-            if self.aux_attrib is not None:
-                for key_prefix in self.aux_attrib:
-                    # Process the data sample, create new attributes and save them in a dictionary
-                    aux_attrib_val = self.aux_attrib[key_prefix](sample, **self.aux_attrib_args[key_prefix])
-                    for key_suffix in aux_attrib_val:
-                        # one function may create multiple attributes, so we need suffix to distinguish them
-                        sample[key_prefix + '_' + key_suffix] = aux_attrib_val[key_suffix]
-            pair_buffer.append(sample)
+        comp1 = np.concatenate([image_t, label_t], axis=-1)
+        sample1 = self.create_sample(comp1, curr_dict)
+        if matching_score < 0.7:
+            sample2 = self.create_sample(comp1, curr_dict)
+        else:
+            comp2 = np.concatenate([image_t_next, label_t_next], axis=-1)
+            sample2 = self.create_sample(comp2, next_dict)
+        pair_buffer = [sample1, sample2]
 
         support_images = []
         support_mask = []

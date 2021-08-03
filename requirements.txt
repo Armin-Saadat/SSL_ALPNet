@@ -1,3 +1,4 @@
+pandas
 json5==0.8.5
 jupyter==1.0.0
 nibabel==2.5.1
