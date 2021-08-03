@@ -126,6 +126,8 @@ venv.bak/
 dmypy.json
 
 data/
+exps/
+pretrained_model/
 
 # Pyre type checker
 .pyre/
