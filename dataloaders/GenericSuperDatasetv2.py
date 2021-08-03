@@ -254,6 +254,24 @@ class SuperpixelDataset(BaseDataset):
 
         pair_buffer = []
 
+        def next_sclice_supix(sp, pl, threshold):
+            '''
+            sp:  super pixel (binary mask)
+            pl:  psuedo label
+            '''
+            assert sp.shape == pl.shape
+            flatten = np.vectorize(lambda x: 1 if x > 0 else x)
+            unique = pd.Series(pl.ravel()).unique()
+            for pix in unique:
+                msk = np.multiply(pl, pl==pix)
+                intersection = np.multiply(sp, msk)
+                union = flatten(sp + msk).sum()
+                score = intersection / union
+                if score >= threshold:
+                    return msk, score
+            return None, None
+
+
         comp = np.concatenate([image_t, label_t], axis=-1)
 
         for ii in range(self.num_rep):
