@@ -9,6 +9,7 @@ import torch
 import copy
 import json
 import re
+import pickle
 
 from dataloaders.common import BaseDataset
 from dataloaders.dataset_utils import *
@@ -89,6 +90,9 @@ class SuperpixelDataset(BaseDataset):
         self.size = len(self.actual_dataset)
         self.overall_slice_by_cls = self.read_classfiles()
 
+        print("start creating and saving supix matches.")
+        self.save_all_supix_matches()
+
         print("Initial scans loaded: ")
         print(self.pid_curr_load)
 
@@ -156,25 +160,19 @@ class SuperpixelDataset(BaseDataset):
         unique = np.unique(pseudo_label_a)
         for supix_value in unique:
             supix_binary = pseudo_label_a == supix_value
-            match, score = get_matched_supix(supix_binary, pseudo_label_b)
+            match, score = self.get_matched_supix(supix_binary, pseudo_label_b)
             match_map[supix_value] = (match, score)
         return match_map
 
     def save_all_supix_matches(self):
-        """
-        Read images into memory and store them in 2D
-        Build tables for the position of an individual 2D slice in the entire dataset
-        """
-        out_list = []
-        self.info_by_scan = {}  # meta data of each scan
-        glb_idx = 0  # global index of a certain slice in a certain scan in entire dataset
         all_fids = self.organize_all_fids()
         supix_matches = {}
         for scan_id, itm in all_fids.items():
-
+            print("scan_id", scan_id)
+            if scan_id > 3:
+                break
             img, _info = read_nii_bysitk(itm["img_fid"], peel_info=True)  # get the meta information out
             img = img.transpose(1, 2, 0)
-            self.info_by_scan[scan_id] = _info
 
             supix_matches[scan_id] = [None for _ in range(img.shape[-1])]
 
@@ -187,18 +185,17 @@ class SuperpixelDataset(BaseDataset):
 
             img = img[:256, :256, :]
             lb = lb[:256, :256, :]
-            # format of slices: [axial_H x axial_W x Z]
 
             assert img.shape[-1] == lb.shape[-1]
 
-            # re-organize 3D images into 2D slices and record essential information for each slice
-            prev_slice = lb[..., 0: 1]
+            lb_a = lb[..., 0: 1]
 
             for ii in range(1, img.shape[-1]):
-                supix_matches.get(scan_id)[ii - 1] = self.get_matches(prev_slice, lb[..., ii: ii + 1])
-                prev_slice = lb[..., ii: ii + 1]
+                supix_matches.get(scan_id)[ii - 1] = self.get_matches(lb_a, lb[..., ii: ii + 1])
+                lb_a = lb[..., ii: ii + 1]
 
-        return out_list
+        with open('../supix_matches/supix_matches.pkl', 'wb') as f:
+            pickle.dump(supix_matches, f)
 
     def read_dataset(self):
         """
