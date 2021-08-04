@@ -354,30 +354,7 @@ class SuperpixelDataset(BaseDataset):
         sample_a = self.create_sample(comp_a, slice_a)
         if matching_score < 0.7:
             sample_b = self.create_sample(comp_a, slice_a)
-            # self.paper_idea_num += 1
-            # print(f'paper: {self.paper_idea_num} index: {index}')
-            # if index % 30 == 0:
-            #     print(f'paper: {self.paper_idea_num}')
-            # self.our_idea_num += 1
-            # print(f'our: {self.our_idea_num} index: {index}')
-            # if index % 30 == 0:
-            #     print(f'our: {self.our_idea_num}')
-            # if np.random.uniform() < 1:
-            #     se = [image_a.transpose(2, 0, 1)[0], image_b.transpose(2, 0, 1)[0], (supix_a.transpose(2, 0, 1)[0] * 10), (supix_b.transpose(2, 0, 1)[0] * 10)]
         else:
-            #     print('--------------------- fig saving ------------------')
-            #     # print(type(supix_a))
-            #     # print(supix_a.shape)
-            #     # print(supix_a.transpose(2, 0, 1)[0].shape)
-            #     # print(type(supix_b))
-            #     # print(supix_b.shape)
-            #     # print(supix_b.transpose(2, 0, 1)[0].shape)
-            #     # print(os.path.join(self.figPath, f'fig{index.item()}.png'))
-            #     # print(type(index))
-            #     # print(type(index.item()))
-            #     # ind = index.item()
-            #     self.pair_plot(seq=se, score=matching_score, saving_path=os.path.join(self.figPath, f'fig{index}.png'), curr_scan_id=curr_scan_id, curr_z_id=curr_z_id, next_scan_id=next_scan_id, next_z_id=next_z_id)
-
             comp_b = np.concatenate([image_b, supix_b], axis=-1)
             sample_b = self.create_sample(comp_b, slice_b)
         pair_buffer = [sample_a, sample_b]
