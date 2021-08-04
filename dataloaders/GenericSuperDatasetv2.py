@@ -90,8 +90,8 @@ class SuperpixelDataset(BaseDataset):
         self.size = len(self.actual_dataset)
         self.overall_slice_by_cls = self.read_classfiles()
 
-        print("start creating and saving supix matches.")
-        self.save_all_supix_matches()
+        # print("start creating and saving supix matches.")
+        # self.save_all_supix_matches()
 
         print("trying to load supix matches.")
         try:
