@@ -9,12 +9,11 @@ import torch
 import copy
 import json
 import re
-import pandas as pd
+
 from dataloaders.common import BaseDataset
 from dataloaders.dataset_utils import *
 from util.utils import CircularList
 from matplotlib import pyplot as plt
-from google.colab.patches import cv2_imshow
 
 
 class SuperpixelDataset(BaseDataset):
@@ -90,7 +89,7 @@ class SuperpixelDataset(BaseDataset):
         self.size = len(self.actual_dataset)
         self.overall_slice_by_cls = self.read_classfiles()
 
-        print("###### Initial scans loaded: ######")
+        print("Initial scans loaded: ")
         print(self.pid_curr_load)
 
     def get_scanids(self, mode, idx_split):
@@ -229,7 +228,8 @@ class SuperpixelDataset(BaseDataset):
 
         return cls_map
 
-    def supcls_pick_binarize(self, super_map, sup_max_cls, bi_val=None):
+    @staticmethod
+    def get_random_supix_mask(super_map, sup_max_cls, bi_val=None):
         """
         pick up a certain super-pixel class or multiple classes, and binarize it into segmentation target
         Args:
@@ -241,9 +241,10 @@ class SuperpixelDataset(BaseDataset):
         if bi_val is None:
             bi_val = int(torch.randint(low=1, high=int(sup_max_cls), size=(1,)))
 
-        return np.float32(super_map == bi_val)
+        return np.float32(super_map == bi_val), bi_val
 
-    def get_matched_supix(self, input_supix, pseudo_lable):
+    @staticmethod
+    def get_matched_supix(input_supix, pseudo_lable):
         assert input_supix.shape == pseudo_lable.shape
         supix_values = np.unique(pseudo_lable)
         intersections = dict((supix_value, 0) for supix_value in supix_values)
@@ -272,7 +273,8 @@ class SuperpixelDataset(BaseDataset):
         else:
             return np.float32(pseudo_lable == best_value), best_score
 
-    def pair_plot(self, seq: list, score: int, saving_path: str, curr_scan_id, curr_z_id, next_scan_id, next_z_id):
+    @staticmethod
+    def pair_plot(seq: list, score: int, saving_path: str, curr_scan_id, curr_z_id, next_scan_id, next_z_id):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
         for i, pic in enumerate(seq):
             if i > 1: break;
@@ -323,39 +325,35 @@ class SuperpixelDataset(BaseDataset):
 
     def __getitem__(self, index):
         index = index % len(self.actual_dataset)
-        # print(index)
-        curr_dict = self.actual_dataset[index]
-        sup_max_cls = curr_dict['sup_max_cls']
-        if sup_max_cls < 1 or curr_dict["is_end"]:
+        slice_a = self.actual_dataset[index]
+        sup_max_cls = slice_a['sup_max_cls']
+        if sup_max_cls < 1 or slice_a["is_end"]:
             return self.__getitem__(index + 1)
 
+        # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
         for _ex_cls in self.exclude_lbs:
-            if curr_dict["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][curr_dict[
-                "scan_id"]]:  # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
+            if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
                 return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
-        next_dict = self.actual_dataset[index + 1]
+        slice_b = self.actual_dataset[index + 1]
 
         for _ex_cls in self.exclude_lbs:
-            if next_dict["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][next_dict[
-                "scan_id"]]:  # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
+            if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
                 return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
-        image_t = curr_dict["img"]
-        label_raw = curr_dict["lb"]
-        # curr_scan_id, curr_z_id = curr_dict['scan_id'], curr_dict['z_id']
+        image_a = slice_a["img"]
+        pseudo_label_a = slice_a["lb"]
 
-        image_t_next = next_dict["img"]
-        label_raw_next = next_dict["lb"]
-        next_scan_id, next_z_id = next_dict['scan_id'], next_dict['z_id']
+        image_b = slice_b["img"]
+        pseudo_label_b = slice_b["lb"]
 
-        label_t = self.supcls_pick_binarize(label_raw, sup_max_cls)
-        label_t_next, matching_score = self.get_matched_supix(label_t, label_raw_next)
+        supix_a, supix_class_a = self.get_random_supix_mask(pseudo_label_a, sup_max_cls)
+        supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
 
-        comp1 = np.concatenate([image_t, label_t], axis=-1)
-        sample1 = self.create_sample(comp1, curr_dict)
+        comp_a = np.concatenate([image_a, supix_a], axis=-1)
+        sample_a = self.create_sample(comp_a, slice_a)
         if matching_score < 0.7:
-            sample2 = self.create_sample(comp1, curr_dict)
+            sample_b = self.create_sample(comp_a, slice_a)
             # self.paper_idea_num += 1
             # print(f'paper: {self.paper_idea_num} index: {index}')
             # if index % 30 == 0:
@@ -365,24 +363,24 @@ class SuperpixelDataset(BaseDataset):
             # if index % 30 == 0:
             #     print(f'our: {self.our_idea_num}')
             # if np.random.uniform() < 1:
-            #     se = [image_t.transpose(2, 0, 1)[0], image_t_next.transpose(2, 0, 1)[0], (label_t.transpose(2, 0, 1)[0] * 10), (label_t_next.transpose(2, 0, 1)[0] * 10)]
+            #     se = [image_a.transpose(2, 0, 1)[0], image_b.transpose(2, 0, 1)[0], (supix_a.transpose(2, 0, 1)[0] * 10), (supix_b.transpose(2, 0, 1)[0] * 10)]
         else:
             #     print('--------------------- fig saving ------------------')
-            #     # print(type(label_t))
-            #     # print(label_t.shape)
-            #     # print(label_t.transpose(2, 0, 1)[0].shape)
-            #     # print(type(label_t_next))
-            #     # print(label_t_next.shape)
-            #     # print(label_t_next.transpose(2, 0, 1)[0].shape)
+            #     # print(type(supix_a))
+            #     # print(supix_a.shape)
+            #     # print(supix_a.transpose(2, 0, 1)[0].shape)
+            #     # print(type(supix_b))
+            #     # print(supix_b.shape)
+            #     # print(supix_b.transpose(2, 0, 1)[0].shape)
             #     # print(os.path.join(self.figPath, f'fig{index.item()}.png'))
             #     # print(type(index))
             #     # print(type(index.item()))
             #     # ind = index.item()
             #     self.pair_plot(seq=se, score=matching_score, saving_path=os.path.join(self.figPath, f'fig{index}.png'), curr_scan_id=curr_scan_id, curr_z_id=curr_z_id, next_scan_id=next_scan_id, next_z_id=next_z_id)
 
-            comp2 = np.concatenate([image_t_next, label_t_next], axis=-1)
-            sample2 = self.create_sample(comp2, next_dict)
-        pair_buffer = [sample1, sample2]
+            comp_b = np.concatenate([image_b, supix_b], axis=-1)
+            sample_b = self.create_sample(comp_b, slice_b)
+        pair_buffer = [sample_a, sample_b]
 
         support_images = []
         support_mask = []
@@ -403,9 +401,9 @@ class SuperpixelDataset(BaseDataset):
                 query_labels.append(itm["label"])
 
         return {'class_ids': [support_class],
-                'support_images': [support_images],  #
+                'support_images': [support_images],
                 'support_mask': [support_mask],
-                'query_images': query_images,  #
+                'query_images': query_images,
                 'query_labels': query_labels,
                 }
 
@@ -413,7 +411,7 @@ class SuperpixelDataset(BaseDataset):
         """
         copy-paste from basic naive dataset configuration
         """
-        if self.fix_length != None:
+        if self.fix_length is not None:
             assert self.fix_length >= len(self.actual_dataset)
             return self.fix_length
         else:
@@ -422,7 +420,8 @@ class SuperpixelDataset(BaseDataset):
     def print_augment_ratio(self):
         return self.our_idea_num, self.paper_idea_num
 
-    def getMaskMedImg(self, label, class_id, class_ids):
+    @staticmethod
+    def getMaskMedImg(label, class_id, class_ids):
         """
         Generate FG/BG mask from the segmentation mask
 
@@ -431,12 +430,9 @@ class SuperpixelDataset(BaseDataset):
             class_id:       semantic class of interest
             class_ids:      all class id in this episode
         """
-        fg_mask = torch.where(label == class_id,
-                              torch.ones_like(label), torch.zeros_like(label))
-        bg_mask = torch.where(label != class_id,
-                              torch.ones_like(label), torch.zeros_like(label))
+        fg_mask = torch.where(label == class_id, torch.ones_like(label), torch.zeros_like(label))
+        bg_mask = torch.where(label != class_id, torch.ones_like(label), torch.zeros_like(label))
         for class_id in class_ids:
             bg_mask[label == class_id] = 0
-
         return {'fg_mask': fg_mask,
                 'bg_mask': bg_mask}
