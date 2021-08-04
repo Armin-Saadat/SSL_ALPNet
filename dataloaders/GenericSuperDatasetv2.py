@@ -93,6 +93,15 @@ class SuperpixelDataset(BaseDataset):
         print("start creating and saving supix matches.")
         self.save_all_supix_matches()
 
+        print("trying to load supix matches.")
+        try:
+            with open('./supix_matches/supix_matches.pkl', 'rb') as f:
+                self.supix_matches = pickle.load(f)
+            print("supix matches loaded completelty.")
+        except:
+            self.supix_matches = None
+            print("no preprocessed supix matches available.")
+
         print("Initial scans loaded: ")
         print(self.pid_curr_load)
 
@@ -169,8 +178,6 @@ class SuperpixelDataset(BaseDataset):
         supix_matches = {}
         for scan_id, itm in all_fids.items():
             print("scan_id", scan_id)
-            if scan_id > 3:
-                break
             img, _info = read_nii_bysitk(itm["img_fid"], peel_info=True)  # get the meta information out
             img = img.transpose(1, 2, 0)
 
@@ -194,7 +201,7 @@ class SuperpixelDataset(BaseDataset):
                 supix_matches.get(scan_id)[ii - 1] = self.get_matches(lb_a, lb[..., ii: ii + 1])
                 lb_a = lb[..., ii: ii + 1]
 
-        with open('../supix_matches/supix_matches.pkl', 'wb') as f:
+        with open('./supix_matches/supix_matches.pkl', 'wb') as f:
             pickle.dump(supix_matches, f)
 
     def read_dataset(self):
@@ -204,7 +211,6 @@ class SuperpixelDataset(BaseDataset):
         """
         out_list = []
         self.info_by_scan = {}  # meta data of each scan
-        glb_idx = 0  # global index of a certain slice in a certain scan in entire dataset
 
         for scan_id, itm in self.img_lb_fids.items():
             if scan_id not in self.pid_curr_load:
@@ -225,7 +231,6 @@ class SuperpixelDataset(BaseDataset):
             lb = lb[:256, :256, :]
 
             # format of slices: [axial_H x axial_W x Z]
-
             assert img.shape[-1] == lb.shape[-1]
 
             # re-organize 3D images into 2D slices and record essential information for each slice
@@ -237,7 +242,6 @@ class SuperpixelDataset(BaseDataset):
                              "nframe": img.shape[-1],
                              "scan_id": scan_id,
                              "z_id": 0})
-            glb_idx += 1
 
             for ii in range(1, img.shape[-1] - 1):
                 out_list.append({"img": img[..., ii: ii + 1],
@@ -249,9 +253,8 @@ class SuperpixelDataset(BaseDataset):
                                  "scan_id": scan_id,
                                  "z_id": ii
                                  })
-                glb_idx += 1
 
-            ii += img.shape[-1] - 1  # last slice of a 3D volume
+            ii = img.shape[-1] - 1  # last slice of a 3D volume
             out_list.append({"img": img[..., ii: ii + 1],
                              "lb": lb[..., ii: ii + 1],
                              "is_start": False,
@@ -261,7 +264,6 @@ class SuperpixelDataset(BaseDataset):
                              "scan_id": scan_id,
                              "z_id": ii
                              })
-            glb_idx += 1
 
         return out_list
 
@@ -388,6 +390,10 @@ class SuperpixelDataset(BaseDataset):
 
         slice_b = self.actual_dataset[index + 1]
 
+        assert slice_a["scan_id"] == slice_b["scan_id"]
+
+        assert slice_a["z_id"] + 1 == slice_b["z_id"]
+
         for _ex_cls in self.exclude_lbs:
             if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
                 return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
@@ -398,8 +404,11 @@ class SuperpixelDataset(BaseDataset):
         image_b = slice_b["img"]
         pseudo_label_b = slice_b["lb"]
 
-        supix_a, supix_class_a = self.get_random_supix_mask(pseudo_label_a, sup_max_cls)
-        supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
+        supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, sup_max_cls)
+        if self.supix_matches is not None:
+            supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
+        else:
+            supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
 
         comp_a = np.concatenate([image_a, supix_a], axis=-1)
         sample_a = self.create_sample(comp_a, slice_a)
