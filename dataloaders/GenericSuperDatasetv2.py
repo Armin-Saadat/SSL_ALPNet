@@ -19,7 +19,8 @@ from google.colab.patches import cv2_imshow
 
 class SuperpixelDataset(BaseDataset):
     def __init__(self, which_dataset, base_dir, idx_split, mode, transforms, scan_per_load, num_rep=2, min_fg='',
-                 nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None, **kwargs):
+                 nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None,
+                 **kwargs):
         """
         Pseudolabel dataset
         Args:
@@ -92,7 +93,6 @@ class SuperpixelDataset(BaseDataset):
         print("###### Initial scans loaded: ######")
         print(self.pid_curr_load)
 
-
     def get_scanids(self, mode, idx_split):
         """
         Load scans by train-test split
@@ -105,7 +105,6 @@ class SuperpixelDataset(BaseDataset):
             return [ii for ii in self.img_pids if ii not in val_ids]
         elif mode == 'val':
             return val_ids
-
 
     def reload_buffer(self):
         """
@@ -127,7 +126,6 @@ class SuperpixelDataset(BaseDataset):
         self.update_subclass_lookup()
         print(f'Loader buffer reloaded with a new size of {self.size} slices')
 
-
     def organize_sample_fids(self):
         out_list = {}
         for curr_id in self.scan_ids:
@@ -140,7 +138,6 @@ class SuperpixelDataset(BaseDataset):
             curr_dict["lbs_fid"] = _lb_fid
             out_list[str(curr_id)] = curr_dict
         return out_list
-
 
     def read_dataset(self):
         """
@@ -218,7 +215,6 @@ class SuperpixelDataset(BaseDataset):
 
         return out_list
 
-
     def read_classfiles(self):
         """
         Load the scan-slice-class indexing file
@@ -233,7 +229,6 @@ class SuperpixelDataset(BaseDataset):
 
         return cls_map
 
-
     def supcls_pick_binarize(self, super_map, sup_max_cls, bi_val=None):
         """
         pick up a certain super-pixel class or multiple classes, and binarize it into segmentation target
@@ -243,39 +238,38 @@ class SuperpixelDataset(BaseDataset):
             sup_max_cls:    max index of superpixel for avoiding overshooting when selecting superpixel
 
         """
-        if bi_val == None:
+        if bi_val is None:
             bi_val = int(torch.randint(low=1, high=int(sup_max_cls), size=(1,)))
 
         return np.float32(super_map == bi_val)
 
-
-    def next_sclice_supix(self, super_pix, pseudo_lable):
-
+    def get_matched_supix(self, super_pix, pseudo_lable):
         assert super_pix.shape == pseudo_lable.shape
-        flatten = np.vectorize(lambda x: 1 if x > 0 else x)
-        unique = pd.Series(pseudo_lable.ravel()).unique()
-        best_match = None
+        supix_values = np.unique(pseudo_lable)
+        intersections = dict((supix_value, 0) for supix_value in supix_values)
+        sizes = dict((supix_value, 0) for supix_value in supix_values)
+        for i in range(pseudo_lable.shape[0]):
+            for j in range(pseudo_lable.shape[1]):
+                supix_value = pseudo_lable[i][j]
+                sizes[supix_value] = sizes.get(supix_value) + 1
+                if super_pix[i][j] == 1:
+                    intersections[supix_value] = intersections.get(supix_value) + 1
+        best_value = None
         best_score = 0
-        for pix in unique:
-            msk = flatten(np.multiply(pseudo_lable, pseudo_lable == pix))
-            intersection = flatten(np.multiply(super_pix, msk)).sum()
-            union = flatten(super_pix + msk).sum()
+        super_pix_size = super_pix.sum()
+        for supix_value in supix_values:
+            intersection = intersections.get(supix_value)
+            size = sizes.get(supix_value)
+            union = super_pix_size + size - intersection
             if union == 0:
                 continue
             score = intersection / union
-            if np.isnan(score):
-                score = 0
             if score >= best_score:
                 best_score = score
-                best_match = msk
-        if best_match is not None:
-            return best_match.astype(np.float), best_score
-        else:
-            return None, best_score
-
+                best_value = supix_value
+        return np.float32(pseudo_lable == best_value), best_score
 
     def pair_plot(self, seq: list, score: int, saving_path: str, curr_scan_id, curr_z_id, next_scan_id, next_z_id):
-        fig = plt.figure(figsize=(10, 10))
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
         for i, pic in enumerate(seq):
             if i > 1: break;
@@ -286,8 +280,7 @@ class SuperpixelDataset(BaseDataset):
                 ax2.imshow(pic + seq[i + 2]);
                 ax2.set(title=f'NextScanID: {next_scan_id}, z_id: {next_z_id} score: {score}')
         if saving_path:
-            fig.savefig(saving_path, transparent=True, bbox_inches='tight');
-
+            fig.savefig(saving_path, transparent=True, bbox_inches='tight')
 
     def create_sample(self, comp, sample_dict):
         img, lb = self.transforms(comp, c_img=1, c_label=1, nclass=self.nclass, is_train=True, use_onehot=False)
@@ -325,7 +318,6 @@ class SuperpixelDataset(BaseDataset):
 
         return sample
 
-
     def __getitem__(self, index):
         index = index % len(self.actual_dataset)
         # print(index)
@@ -355,7 +347,7 @@ class SuperpixelDataset(BaseDataset):
         next_scan_id, next_z_id = next_dict['scan_id'], next_dict['z_id']
 
         label_t = self.supcls_pick_binarize(label_raw, sup_max_cls)
-        label_t_next, matching_score = self.next_sclice_supix(label_t, label_raw_next)
+        label_t_next, matching_score = self.get_matched_supix(label_t, label_raw_next)
 
         comp1 = np.concatenate([image_t, label_t], axis=-1)
         sample1 = self.create_sample(comp1, curr_dict)
@@ -414,7 +406,6 @@ class SuperpixelDataset(BaseDataset):
                 'query_labels': query_labels,
                 }
 
-
     def __len__(self):
         """
         copy-paste from basic naive dataset configuration
@@ -425,10 +416,8 @@ class SuperpixelDataset(BaseDataset):
         else:
             return len(self.actual_dataset)
 
-
     def print_augment_ratio(self):
         return self.our_idea_num, self.paper_idea_num
-
 
     def getMaskMedImg(self, label, class_id, class_ids):
         """
