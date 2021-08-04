@@ -65,7 +65,7 @@ class SuperpixelDataset(BaseDataset):
         self.exclude_lbs = exclude_list
         self.superpix_scale = superpix_scale
         if len(exclude_list) > 0:
-            print(f'###### Dataset: the following classes has been excluded {exclude_list}######')
+            print(f'Dataset: the following classes has been excluded {exclude_list}')
         self.idx_split = idx_split
         self.scan_ids = self.get_scanids(mode, idx_split)  # patient ids of the entire fold
         self.min_fg = min_fg if isinstance(min_fg, str) else str(min_fg)
@@ -144,7 +144,6 @@ class SuperpixelDataset(BaseDataset):
         Build tables for the position of an individual 2D slice in the entire dataset
         """
         out_list = []
-        self.scan_z_idx = {}
         self.info_by_scan = {}  # meta data of each scan
         glb_idx = 0  # global index of a certain slice in a certain scan in entire dataset
 
@@ -158,8 +157,6 @@ class SuperpixelDataset(BaseDataset):
 
             img = np.float32(img)
             img = self.norm_func(img)
-
-            self.scan_z_idx[scan_id] = [-1 for _ in range(img.shape[-1])]
 
             lb = read_nii_bysitk(itm["lbs_fid"])
             lb = lb.transpose(1, 2, 0)
@@ -181,8 +178,6 @@ class SuperpixelDataset(BaseDataset):
                              "nframe": img.shape[-1],
                              "scan_id": scan_id,
                              "z_id": 0})
-
-            self.scan_z_idx[scan_id][0] = glb_idx
             glb_idx += 1
 
             for ii in range(1, img.shape[-1] - 1):
@@ -195,10 +190,9 @@ class SuperpixelDataset(BaseDataset):
                                  "scan_id": scan_id,
                                  "z_id": ii
                                  })
-                self.scan_z_idx[scan_id][ii] = glb_idx
                 glb_idx += 1
 
-            ii += 1  # last slice of a 3D volume
+            ii += img.shape[-1] - 1  # last slice of a 3D volume
             out_list.append({"img": img[..., ii: ii + 1],
                              "lb": lb[..., ii: ii + 1],
                              "is_start": False,
@@ -208,8 +202,6 @@ class SuperpixelDataset(BaseDataset):
                              "scan_id": scan_id,
                              "z_id": ii
                              })
-
-            self.scan_z_idx[scan_id][ii] = glb_idx
             glb_idx += 1
 
         return out_list
