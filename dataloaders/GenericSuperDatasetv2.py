@@ -250,9 +250,9 @@ class SuperpixelDataset(BaseDataset):
         sizes = dict((supix_value, 0) for supix_value in supix_values)
         for i in range(pseudo_lable.shape[0]):
             for j in range(pseudo_lable.shape[1]):
-                supix_value = pseudo_lable[i][j]
+                supix_value = pseudo_lable[i][j][0]
                 sizes[supix_value] = sizes.get(supix_value) + 1
-                if input_supix[i][j] == 1:
+                if input_supix[i][j][0] == 1:
                     intersections[supix_value] = intersections.get(supix_value) + 1
         best_value = None
         best_score = 0
@@ -268,7 +268,7 @@ class SuperpixelDataset(BaseDataset):
                 best_score = score
                 best_value = supix_value
         if best_value is None:
-            return None, best_score
+            return None, -1
         else:
             return np.float32(pseudo_lable == best_value), best_score
 
