@@ -267,7 +267,10 @@ class SuperpixelDataset(BaseDataset):
             if score >= best_score:
                 best_score = score
                 best_value = supix_value
-        return np.float32(pseudo_lable == best_value), best_score
+        if best_value is None:
+            return None, best_score
+        else:
+            return np.float32(pseudo_lable == best_value), best_score
 
     def pair_plot(self, seq: list, score: int, saving_path: str, curr_scan_id, curr_z_id, next_scan_id, next_z_id):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
