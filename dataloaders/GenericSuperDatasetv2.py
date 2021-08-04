@@ -243,8 +243,8 @@ class SuperpixelDataset(BaseDataset):
 
         return np.float32(super_map == bi_val)
 
-    def get_matched_supix(self, super_pix, pseudo_lable):
-        assert super_pix.shape == pseudo_lable.shape
+    def get_matched_supix(self, input_supix, pseudo_lable):
+        assert input_supix.shape == pseudo_lable.shape
         supix_values = np.unique(pseudo_lable)
         intersections = dict((supix_value, 0) for supix_value in supix_values)
         sizes = dict((supix_value, 0) for supix_value in supix_values)
@@ -252,15 +252,15 @@ class SuperpixelDataset(BaseDataset):
             for j in range(pseudo_lable.shape[1]):
                 supix_value = pseudo_lable[i][j]
                 sizes[supix_value] = sizes.get(supix_value) + 1
-                if super_pix[i][j] == 1:
+                if input_supix[i][j] == 1:
                     intersections[supix_value] = intersections.get(supix_value) + 1
         best_value = None
         best_score = 0
-        super_pix_size = super_pix.sum()
+        input_supix_size = input_supix.sum()
         for supix_value in supix_values:
             intersection = intersections.get(supix_value)
             size = sizes.get(supix_value)
-            union = super_pix_size + size - intersection
+            union = input_supix_size + size - intersection
             if union == 0:
                 continue
             score = intersection / union
