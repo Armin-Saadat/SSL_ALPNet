@@ -113,7 +113,7 @@ class SuperpixelDataset(BaseDataset):
         3. update other internel variables like __len__
         """
         if self.scan_per_load <= 0:
-            print("We are not using the reload buffer, doing notiong")
+            print("We are not using the reload buffer, doing nothing")
             return -1
 
         del self.actual_dataset
@@ -136,6 +136,68 @@ class SuperpixelDataset(BaseDataset):
             curr_dict["img_fid"] = _img_fid
             curr_dict["lbs_fid"] = _lb_fid
             out_list[str(curr_id)] = curr_dict
+        return out_list
+
+    def organize_all_fids(self):
+        out_list = {}
+        for curr_id in self.img_pids:
+            curr_dict = {}
+
+            _img_fid = os.path.join(self.base_dir, f'image_{curr_id}.nii.gz')
+            _lb_fid = os.path.join(self.base_dir, f'superpix-{self.superpix_scale}_{curr_id}.nii.gz')
+
+            curr_dict["img_fid"] = _img_fid
+            curr_dict["lbs_fid"] = _lb_fid
+            out_list[str(curr_id)] = curr_dict
+        return out_list
+
+    def get_matches(self, pseudo_label_a, pseudo_label_b):
+        match_map = {}
+        unique = np.unique(pseudo_label_a)
+        for supix_value in unique:
+            supix_binary = pseudo_label_a == supix_value
+            match, score = get_matched_supix(supix_binary, pseudo_label_b)
+            match_map[supix_value] = (match, score)
+        return match_map
+
+    def save_all_supix_matches(self):
+        """
+        Read images into memory and store them in 2D
+        Build tables for the position of an individual 2D slice in the entire dataset
+        """
+        out_list = []
+        self.info_by_scan = {}  # meta data of each scan
+        glb_idx = 0  # global index of a certain slice in a certain scan in entire dataset
+        all_fids = self.organize_all_fids()
+        supix_matches = {}
+        for scan_id, itm in all_fids.items():
+
+            img, _info = read_nii_bysitk(itm["img_fid"], peel_info=True)  # get the meta information out
+            img = img.transpose(1, 2, 0)
+            self.info_by_scan[scan_id] = _info
+
+            supix_matches[scan_id] = [None for _ in range(img.shape[-1])]
+
+            img = np.float32(img)
+            img = self.norm_func(img)
+
+            lb = read_nii_bysitk(itm["lbs_fid"])
+            lb = lb.transpose(1, 2, 0)
+            lb = np.int32(lb)
+
+            img = img[:256, :256, :]
+            lb = lb[:256, :256, :]
+            # format of slices: [axial_H x axial_W x Z]
+
+            assert img.shape[-1] == lb.shape[-1]
+
+            # re-organize 3D images into 2D slices and record essential information for each slice
+            prev_slice = lb[..., 0: 1]
+
+            for ii in range(1, img.shape[-1]):
+                supix_matches.get(scan_id)[ii - 1] = self.get_matches(prev_slice, lb[..., ii: ii + 1])
+                prev_slice = lb[..., ii: ii + 1]
+
         return out_list
 
     def read_dataset(self):
