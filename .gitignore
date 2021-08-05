@@ -354,6 +354,7 @@ modules.xml
 data/
 exps/
 pretrained_model/
+supix_matches/
 
 # Pyre type checker
 .pyre/
