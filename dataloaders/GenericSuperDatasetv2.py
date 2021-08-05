@@ -181,7 +181,7 @@ class SuperpixelDataset(BaseDataset):
             img, _info = read_nii_bysitk(itm["img_fid"], peel_info=True)  # get the meta information out
             img = img.transpose(1, 2, 0)
 
-            supix_matches[scan_id] = [None for _ in range(img.shape[-1])]
+            supix_matches[scan_id] = [None for _ in range(img.shape[-1] - 1)]
 
             img = np.float32(img)
             img = self.norm_func(img)
@@ -234,9 +234,9 @@ class SuperpixelDataset(BaseDataset):
             assert img.shape[-1] == lb.shape[-1]
 
             # re-organize 3D images into 2D slices and record essential information for each slice
-            out_list.append({"img": img[..., 0: 1],
-                             "lb": lb[..., 0: 1],
-                             "sup_max_cls": lb[..., 0: 1].max(),
+            out_list.append({"img": img[..., 0:1],
+                             "lb": lb[..., 0:1],
+                             "supix_values": np.unique(lb[..., 0:1]),
                              "is_start": True,
                              "is_end": False,
                              "nframe": img.shape[-1],
@@ -248,7 +248,7 @@ class SuperpixelDataset(BaseDataset):
                                  "lb": lb[..., ii: ii + 1],
                                  "is_start": False,
                                  "is_end": False,
-                                 "sup_max_cls": lb[..., ii: ii + 1].max(),
+                                 "supix_values": np.unique(lb[..., ii: ii + 1]),
                                  "nframe": -1,
                                  "scan_id": scan_id,
                                  "z_id": ii
@@ -259,7 +259,7 @@ class SuperpixelDataset(BaseDataset):
                              "lb": lb[..., ii: ii + 1],
                              "is_start": False,
                              "is_end": True,
-                             "sup_max_cls": lb[..., ii: ii + 1].max(),
+                             "supix_values": np.unique(lb[..., ii: ii + 1]),
                              "nframe": -1,
                              "scan_id": scan_id,
                              "z_id": ii
@@ -282,19 +282,18 @@ class SuperpixelDataset(BaseDataset):
         return cls_map
 
     @staticmethod
-    def get_random_supix_mask(super_map, sup_max_cls, bi_val=None):
+    def get_random_supix_mask(super_map, supix_values, supix_value=None):
         """
         pick up a certain super-pixel class or multiple classes, and binarize it into segmentation target
         Args:
             super_map:      super-pixel map
-            bi_val:         if given, pick up a certain superpixel. Otherwise, draw a random one
-            sup_max_cls:    max index of superpixel for avoiding overshooting when selecting superpixel
-
+            supix_value:         if given, pick up a certain superpixel. Otherwise, draw a random one
+            supix_values:    superpixel's values e.g: [1, 2, ... 5, 7]
         """
-        if bi_val is None:
-            bi_val = int(torch.randint(low=1, high=int(sup_max_cls), size=(1,)))
+        if supix_value is None:
+            supix_value = int(supix_values[torch.randint(len(supix_values), (1,))])
 
-        return np.float32(super_map == bi_val), bi_val
+        return np.float32(super_map == supix_value), supix_value
 
     @staticmethod
     def get_matched_supix(input_supix, pseudo_lable):
@@ -379,8 +378,8 @@ class SuperpixelDataset(BaseDataset):
     def __getitem__(self, index):
         index = index % len(self.actual_dataset)
         slice_a = self.actual_dataset[index]
-        sup_max_cls = slice_a['sup_max_cls']
-        if sup_max_cls < 1 or slice_a["is_end"]:
+        supix_values = slice_a['supix_values']
+        if len(supix_values) < 1 or slice_a["is_end"]:
             return self.__getitem__(index + 1)
 
         # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
@@ -404,7 +403,7 @@ class SuperpixelDataset(BaseDataset):
         image_b = slice_b["img"]
         pseudo_label_b = slice_b["lb"]
 
-        supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, sup_max_cls)
+        supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, supix_values)
         if self.supix_matches is not None:
             supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
         else:
