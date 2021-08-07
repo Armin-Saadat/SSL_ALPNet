@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# data and data.zip
+data
+data.zip
 
 # Distribution / packaging
 .Python
