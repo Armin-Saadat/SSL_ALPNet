@@ -383,9 +383,9 @@ class SuperpixelDataset(BaseDataset):
             return self.__getitem__(index + 1)
 
         # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
-        # for _ex_cls in self.exclude_lbs:
-        #     if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
-        #         return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
+        for _ex_cls in self.exclude_lbs:
+            if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
+                return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
         # slice_b = self.actual_dataset[index + 1]
 
