@@ -6,8 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# zip files (added for visualization folder)
-*.zip
 
 # Distribution / packaging
 .Python
