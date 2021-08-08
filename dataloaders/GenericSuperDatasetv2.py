@@ -90,17 +90,17 @@ class SuperpixelDataset(BaseDataset):
         self.size = len(self.actual_dataset)
         self.overall_slice_by_cls = self.read_classfiles()
 
-        # print("start creating and saving supix matches.")
-        # self.save_all_supix_matches()
+        print("start creating and saving supix matches.")
+        self.save_all_supix_matches()
 
-        # print("trying to load supix matches.")
-        # try:
-        #     with open('./supix_matches/supix_matches.pkl', 'rb') as f:
-        #         self.supix_matches = pickle.load(f)
-        #     print("supix matches loaded completelty.")
-        # except:
-        #     self.supix_matches = None
-        #     print("no preprocessed supix matches available.")
+        print("trying to load supix matches.")
+        try:
+            with open('./supix_matches/supix_matches.pkl', 'rb') as f:
+                self.supix_matches = pickle.load(f)
+            print("supix matches loaded completelty.")
+        except:
+            self.supix_matches = None
+            print("no preprocessed supix matches available.")
 
         print("Initial scans loaded: ")
         print(self.pid_curr_load)
@@ -387,35 +387,35 @@ class SuperpixelDataset(BaseDataset):
             if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
                 return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
-        # slice_b = self.actual_dataset[index + 1]
+        slice_b = self.actual_dataset[index + 1]
 
-        # assert slice_a["scan_id"] == slice_b["scan_id"]
+        assert slice_a["scan_id"] == slice_b["scan_id"]
 
-        # assert slice_a["z_id"] + 1 == slice_b["z_id"]
+        assert slice_a["z_id"] + 1 == slice_b["z_id"]
 
-        # for _ex_cls in self.exclude_lbs:
-        #     if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
-        #         return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
+        for _ex_cls in self.exclude_lbs:
+            if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
+                return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
         image_a = slice_a["img"]
         pseudo_label_a = slice_a["lb"]
 
-        # image_b = slice_b["img"]
-        # pseudo_label_b = slice_b["lb"]
+        image_b = slice_b["img"]
+        pseudo_label_b = slice_b["lb"]
 
         supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, supix_values)
-        # if self.supix_matches is not None:
-        #     supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
-        # else:
-        #     supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
+        if self.supix_matches is not None:
+            supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
+        else:
+            supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
 
         comp_a = np.concatenate([image_a, supix_a], axis=-1)
         sample_a = self.create_sample(comp_a, slice_a)
-        # if matching_score < 0.7:
-        sample_b = self.create_sample(comp_a, slice_a)
-        # else:
-        #     comp_b = np.concatenate([image_b, supix_b], axis=-1)
-        #     sample_b = self.create_sample(comp_b, slice_b)
+        if matching_score < 0.7:
+            sample_b = self.create_sample(comp_a, slice_a)
+        else:
+            comp_b = np.concatenate([image_b, supix_b], axis=-1)
+            sample_b = self.create_sample(comp_b, slice_b)
         pair_buffer = [sample_a, sample_b]
 
         support_images = []
