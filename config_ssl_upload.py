@@ -70,11 +70,13 @@ def cfg():
     support_idx=[-1] # indicating which scan is used as support in testing.
     val_wsize=2 # L_H, L_W in testing
     n_sup_part = 3 # number of chuncks in testing
+    model_folder=0
+    model_snapshot=0
 
     # Network
     modelname = 'dlfcn_res101' # resnet 101 backbone from torchvision fcn-deeplab
     clsname = None #
-    reload_model_path = None # path for reloading a trained model (overrides ms-coco initialization)
+    reload_base_path = None # path for reloading a trained model (overrides ms-coco initialization)
     proto_grid_size = 8 # L_H, L_W = (32, 32) / 8 = (4, 4)  in training
     feature_hw = [32, 32] # feature map size, should couple this with backbone in future
 
@@ -88,7 +90,7 @@ def cfg():
         'cls_name': clsname,
         'proto_grid_size' : proto_grid_size,
         'feature_hw': feature_hw,
-        'reload_model_path': reload_model_path
+        'reload_base_path': reload_base_path
     }
 
     task = {
