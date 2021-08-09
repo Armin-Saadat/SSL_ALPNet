@@ -44,7 +44,9 @@ def main(_run, _config, _log):
     torch.cuda.set_device(device=_config['gpu_id'])
     torch.set_num_threads(1)
 
-    path_to_load_from = './exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot/1/snapshots/25000.pth'
+    path_to_load_from = './exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot/'
+    path_to_load_from += f'{_config["pre_trained_folder"]}/snapshots/{_config["pre_trained_snapshot"]}.pth'
+
     _log.info('###### Create model ######')
     model = FewShotSeg(pretrained_path=path_to_load_from, cfg=_config['model'])
 
@@ -119,7 +121,7 @@ def main(_run, _config, _log):
 
     _log.info('###### Training ######')
     for sub_epoch in range(n_sub_epoches):
-        _log.info(f'###### This is epoch {sub_epoch} of {n_sub_epoches} epoches ######')
+        _log.info(f'\n###### This is epoch {sub_epoch} of {n_sub_epoches} epoches ######')
         for _, sample_batched in enumerate(trainloader):
             # Prepare input
             i_iter += 1
@@ -187,4 +189,3 @@ def main(_run, _config, _log):
 
             if (i_iter - 2) > _config['n_steps']:
                 return 1 # finish up
-

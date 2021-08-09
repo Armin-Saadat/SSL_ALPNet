@@ -3,6 +3,7 @@ Experiment configuration file
 Extended from config file from original PANet Repository
 """
 import os
+import re
 import glob
 import itertools
 
@@ -54,10 +55,13 @@ def cfg():
     exclude_cls_list = [2, 3] # testing classes to be excluded in training. Set to [] if testing under setting 1
     usealign = True # see vanilla PANet
     use_wce = True
+
     supix_matching_threshold = 0.7
     create_supix_matching_prep_file = False
     use_supix_matching = True
     exclude_testing_objs = True
+    pre_trained_folder = 0
+    pre_trained_snapshot = 0
 
 
     ### Validation

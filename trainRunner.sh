@@ -11,7 +11,7 @@ DATASET='CHAOST2_Superpix'
 NWORKER=4
 
 ALL_EV=(0) # 5-fold cross validation (0, 1, 2, 3, 4)
-ALL_SCALE=("MIDDLE") # config of pseudolabels
+ALL_SCALE=("MIDDLE") # config of pseudo labels
 
 LABEL_SETS=0
 EXCLU='[2,3]' # setting 2: excluding kidneys in training set to test generalization capability even though they are unlabeled. Use [] for setting 1 by Roy et al.
@@ -20,14 +20,19 @@ EXCLU='[2,3]' # setting 2: excluding kidneys in training set to test generalizat
 # LABEL_SETS=1
 # EXCLU='[1,4]'
 
-NSTEP=100100 # Training configs
+NSTEP=100100
 DECAY=0.95
 MAX_ITER=1000 # defines the size of an epoch
 SNAPSHOT_INTERVAL=10000  # interval for saving snapshot
 SEED='1234'
+
 supix_matching_threshold=0.5
+pre_trained_folder=1
+pre_trained_snapshot=25000
+
 ###### Validation configs ######
 SUPP_ID='[4]' #  # using the additionally loaded scan as support
+
 echo ===================================
 
 for EVAL_FOLD in "${ALL_EV[@]}"
@@ -68,6 +73,8 @@ do
     supix_matching_threshold=$supix_matching_threshold \
     'create_supix_matching_prep_file=False' \
     'use_supix_matching=False' \
-    'exclude_testing_objs=True'
+    'exclude_testing_objs=True' \
+    pre_trained_folder=$pre_trained_folder \
+    pre_trained_snapshot=$pre_trained_snapshot
     done
 done
