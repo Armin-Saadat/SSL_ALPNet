@@ -31,8 +31,8 @@ def cfg():
     """Default configurations"""
     seed = 1234
     gpu_id = 0
-    mode = 'train' # for now only allows 'train' 
-    num_workers = 4 # 0 for debugging. 
+    mode = 'train' # for now only allows 'train'
+    num_workers = 4 # 0 for debugging.
 
     dataset = 'CHAOST2_Superpix' # i.e. abdominal MRI
     use_coco_init = True # initialize backbone with MS_COCO initialization. Anyway coco does not contain medical images
@@ -54,17 +54,22 @@ def cfg():
     exclude_cls_list = [2, 3] # testing classes to be excluded in training. Set to [] if testing under setting 1
     usealign = True # see vanilla PANet
     use_wce = True
+    supix_matching_threshold = 0.7
+    create_supix_matching_prep_file = False
+    use_supix_matching = True
+    exclude_testing_objs = True
+
 
     ### Validation
-    z_margin = 0 
+    z_margin = 0
     eval_fold = 0 # which fold for 5 fold cross validation
-    support_idx=[-1] # indicating which scan is used as support in testing. 
+    support_idx=[-1] # indicating which scan is used as support in testing.
     val_wsize=2 # L_H, L_W in testing
     n_sup_part = 3 # number of chuncks in testing
 
     # Network
     modelname = 'dlfcn_res101' # resnet 101 backbone from torchvision fcn-deeplab
-    clsname = None # 
+    clsname = None #
     reload_model_path = None # path for reloading a trained model (overrides ms-coco initialization)
     proto_grid_size = 8 # L_H, L_W = (32, 32) / 8 = (4, 4)  in training
     feature_hw = [32, 32] # feature map size, should couple this with backbone in future
@@ -86,12 +91,12 @@ def cfg():
         'n_ways': 1,
         'n_shots': 1,
         'n_queries': 1,
-        'npart': n_sup_part 
+        'npart': n_sup_part
     }
 
     optim_type = 'sgd'
     optim = {
-        'lr': 1e-3, 
+        'lr': 1e-3,
         'momentum': 0.9,
         'weight_decay': 0.0005,
     }
@@ -106,15 +111,15 @@ def cfg():
     path = {
         'log_dir': './runs',
         'SABS':{'data_dir': "./data/SABS/sabs_CT_normalized"
-            },
+                },
         'C0':{'data_dir': "feed your dataset path here"
-            },
+              },
         'CHAOST2':{'data_dir': "./data/CHAOST2/chaos_MR_T2_normalized/"
-            },
+                   },
         'SABS_Superpix':{'data_dir': "./data/SABS/sabs_CT_normalized"},
         'C0_Superpix':{'data_dir': "feed your dataset path here"},
         'CHAOST2_Superpix':{'data_dir': "./data/CHAOST2/chaos_MR_T2_normalized/"},
-        }
+    }
 
 
 @ex.config_hook

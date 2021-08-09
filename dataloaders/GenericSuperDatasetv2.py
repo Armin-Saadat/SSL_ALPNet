@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 class SuperpixelDataset(BaseDataset):
     def __init__(self, which_dataset, base_dir, idx_split, mode, transforms, scan_per_load, num_rep=2, min_fg='',
                  nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None,
-                 **kwargs):
+                 supix_matching_threshold=0.7, create_supix_matching_prep_file=False, use_supix_matching=False, exclude_testing_objs=True, **kwargs):
         """
         Pseudolabel dataset
         Args:
@@ -40,6 +40,9 @@ class SuperpixelDataset(BaseDataset):
         super(SuperpixelDataset, self).__init__(base_dir)
 
         self.figPath = figPath
+        self.supix_matching_threshold = supix_matching_threshold
+        self.exclude_testing_objs = exclude_testing_objs
+        self.use_supix_matching = use_supix_matching
 
         self.our_idea_num = 0
         self.paper_idea_num = 1
@@ -90,17 +93,21 @@ class SuperpixelDataset(BaseDataset):
         self.size = len(self.actual_dataset)
         self.overall_slice_by_cls = self.read_classfiles()
 
-        print("start creating and saving supix matches.")
-        self.save_all_supix_matches()
-
-        print("trying to load supix matches.")
-        try:
-            with open('./supix_matches/supix_matches.pkl', 'rb') as f:
-                self.supix_matches = pickle.load(f)
-            print("supix matches loaded completelty.")
-        except:
+        # supix matches preprocess
+        if create_supix_matching_prep_file:
+            print("\n--- start creating and saving supix matches ---")
+            self.save_all_supix_matches()
+        if use_supix_matching:
+            print('\n----- TRAINING MODE: SUPIX MATCHING -----')
+            print("--- trying to load supix matches ---")
+            try:
+                with open('./supix_matches/supix_matches.pkl', 'rb') as f:
+                    self.supix_matches = pickle.load(f)
+                print("--- supix matches loaded completelty ---")
+            except:
+                print('\n------ "use_supix_matching" is true but no preprocessed file is available. Will find matches on fly. ------')
+        else:
             self.supix_matches = None
-            print("no preprocessed supix matches available.")
 
         print("Initial scans loaded: ")
         print(self.pid_curr_load)
@@ -382,41 +389,51 @@ class SuperpixelDataset(BaseDataset):
         if len(supix_values) < 1 or slice_a["is_end"]:
             return self.__getitem__(index + 1)
 
-        # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
-        for _ex_cls in self.exclude_lbs:
-            if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
-                return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
+        if self.exclude_testing_objs:
+            #if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
+            for _ex_cls in self.exclude_lbs:
+                if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
+                    return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
-        slice_b = self.actual_dataset[index + 1]
-
-        assert slice_a["scan_id"] == slice_b["scan_id"]
-
-        assert slice_a["z_id"] + 1 == slice_b["z_id"]
-
-        for _ex_cls in self.exclude_lbs:
-            if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
-                return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
+        if self.use_supix_matching:
+            slice_b = self.actual_dataset[index + 1]
+            assert slice_a["scan_id"] == slice_b["scan_id"]
+            assert slice_a["z_id"] + 1 == slice_b["z_id"]
+            if self.exclude_testing_objs:
+                for _ex_cls in self.exclude_lbs:
+                    if slice_b["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_b["scan_id"]]:
+                        return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
 
         image_a = slice_a["img"]
         pseudo_label_a = slice_a["lb"]
-
-        image_b = slice_b["img"]
-        pseudo_label_b = slice_b["lb"]
-
         supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, supix_values)
-        if self.supix_matches is not None:
-            supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
-        else:
-            supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
-
         comp_a = np.concatenate([image_a, supix_a], axis=-1)
-        sample_a = self.create_sample(comp_a, slice_a)
-        if matching_score < 0.7:
-            sample_b = self.create_sample(comp_a, slice_a)
+
+        if self.use_supix_matching:
+            image_b = slice_b["img"]
+            pseudo_label_b = slice_b["lb"]
+            if self.supix_matches is not None:
+                # read match from preprocessed file
+                supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
+            else:
+                # find match on fly
+                supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
+
+            if matching_score < self.supix_matching_threshold:
+                print(self.supix_matching_threshold)
+                sample_b = self.create_sample(comp_a, slice_a)
+            else:
+                comp_b = np.concatenate([image_b, supix_b], axis=-1)
+                sample_b = self.create_sample(comp_b, slice_b)
         else:
-            comp_b = np.concatenate([image_b, supix_b], axis=-1)
-            sample_b = self.create_sample(comp_b, slice_b)
-        pair_buffer = [sample_a, sample_b]
+            sample_b = self.create_sample(comp_a, slice_a)
+
+        sample_a = self.create_sample(comp_a, slice_a)
+
+        if np.random.uniform() > 0.5:
+            pair_buffer = [sample_a, sample_b]
+        else:
+            pair_buffer = [sample_b, sample_a]
 
         support_images = []
         support_mask = []

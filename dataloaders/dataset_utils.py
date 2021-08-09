@@ -5,7 +5,7 @@ import numpy as np
 
 import os
 import sys
-import nibabel as nib
+# import nibabel as nib
 import numpy as np
 import pdb
 import SimpleITK as sitk
