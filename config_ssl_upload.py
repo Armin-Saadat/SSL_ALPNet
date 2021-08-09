@@ -3,7 +3,6 @@ Experiment configuration file
 Extended from config file from original PANet Repository
 """
 import os
-import re
 import glob
 import itertools
 
