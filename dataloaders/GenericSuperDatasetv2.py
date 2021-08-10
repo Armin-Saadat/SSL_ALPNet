@@ -17,11 +17,11 @@ from util.utils import CircularList
 from matplotlib import pyplot as plt
 
 
-
 class SuperpixelDataset(BaseDataset):
     def __init__(self, which_dataset, base_dir, idx_split, mode, transforms, scan_per_load, num_rep=2, min_fg='',
                  nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None,
-                 supix_matching_threshold=0.7, create_supix_matching_prep_file=False, use_supix_matching=False, exclude_testing_objs=True, **kwargs):
+                 supix_matching_threshold=0.7, create_supix_matching_prep_file=False, use_supix_matching=False,
+                 exclude_testing_objs=True, **kwargs):
         """
         Pseudolabel dataset
         Args:
@@ -106,7 +106,8 @@ class SuperpixelDataset(BaseDataset):
                     self.supix_matches = pickle.load(f)
                 print("\n--- supix matches loaded completelty ---\n")
             except:
-                print('\n------ "use_supix_matching" is true but no preprocessed file is available. Will find matches on fly. ------\n')
+                print(
+                    '\n------ "use_supix_matching" is true but no preprocessed file is available. Will find matches on fly. ------\n')
                 self.supix_matches = None
         else:
             self.supix_matches = None
@@ -392,7 +393,7 @@ class SuperpixelDataset(BaseDataset):
             return self.__getitem__(index + 1)
 
         if self.exclude_testing_objs:
-            #if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
+            # if using setting 1, this slice need to be excluded since it contains label which is supposed to be unseen
             for _ex_cls in self.exclude_lbs:
                 if slice_a["z_id"] in self.tp1_cls_map[self.real_label_name[_ex_cls]][slice_a["scan_id"]]:
                     return self.__getitem__(torch.randint(low=0, high=self.__len__() - 1, size=(1,)))
@@ -439,8 +440,9 @@ class SuperpixelDataset(BaseDataset):
             pair_buffer = [sample_a, sample_b]
         else:
             pair_buffer = [sample_b, sample_a]
-        if self.use_supix_matching and r < 0.005:
-            print(f'\n======== (estimation) num_used_matches: {self.matches_num},   num_all: {self.all_batches} ========\n')
+        # if self.use_supix_matching and r < 0.005:
+        #     print(
+        #         f'\n======== (estimation) num_used_matches: {self.matches_num},   num_all: {self.all_batches} ========\n')
 
         support_images = []
         support_mask = []
@@ -496,4 +498,3 @@ class SuperpixelDataset(BaseDataset):
             bg_mask[label == class_id] = 0
         return {'fg_mask': fg_mask,
                 'bg_mask': bg_mask}
-
