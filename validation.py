@@ -46,7 +46,8 @@ def main(_run, _config, _log):
     torch.set_num_threads(1)
 
     _log.info(f'###### Reload model from folder/snapshot:  {_config["model_folder"]}/{_config["model_snapshot"]}.pth ######')
-    model_path = f'{_config["reload_base_path"]}/{_config["model_folder"]}/snapshots/{_config["model_snapshot"]}.pth'
+
+    model_path = f'{_config["reload_root"]}{_config["reload_base_path"]}/{_config["model_folder"]}/snapshots/{_config["model_snapshot"]}.pth'
     model = FewShotSeg(pretrained_path = model_path, cfg=_config['model'])
     model = model.cuda()
     model.eval()

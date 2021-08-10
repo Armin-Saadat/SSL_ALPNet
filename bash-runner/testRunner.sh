@@ -2,7 +2,7 @@
 
 model_folder=1
 model_snapshot=25000
-reload_root='./'
+reload_root='/HDD/SSL_ALPNet_models/'
 
 python3 validation.py with \
 reload_root=$reload_root \
