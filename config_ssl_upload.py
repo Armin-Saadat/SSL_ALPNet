@@ -63,6 +63,7 @@ def cfg():
     pre_trained_folder = 0
     pre_trained_snapshot = 0
     use_pre_trained = False
+    saving_root = './'
 
 
     ### Validation
