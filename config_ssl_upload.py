@@ -74,6 +74,7 @@ def cfg():
     n_sup_part = 3 # number of chuncks in testing
     model_folder=0
     model_snapshot=0
+    reload_root = '/HDD/SSL_ALPNet_models'
 
     # Network
     modelname = 'dlfcn_res101' # resnet 101 backbone from torchvision fcn-deeplab
