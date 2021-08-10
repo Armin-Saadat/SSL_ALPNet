@@ -58,7 +58,6 @@ def main(_run, _config, _log):
         baseset_name = 'SABS'
     elif data_name == 'C0_Superpix':
         raise NotImplementedError
-        baseset_name = 'C0'
     elif data_name == 'CHAOST2_Superpix':
         baseset_name = 'CHAOST2'
     else:
@@ -172,7 +171,6 @@ def main(_run, _config, _log):
                 log_loss['align_loss'] = 0
 
                 print(f'step {i_iter + 1}: loss: {loss}, align_loss: {align_loss},')
-                print(f'matches: {trainloader.dataset.matches_num}   all: {trainloader.dataset.all_batches}')
 
             if (i_iter + 1) % _config['save_snapshot_every'] == 0:
                 _log.info('###### Taking snapshot ######')

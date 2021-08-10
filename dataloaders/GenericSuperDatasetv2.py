@@ -44,8 +44,6 @@ class SuperpixelDataset(BaseDataset):
         self.supix_matching_threshold = supix_matching_threshold
         self.exclude_testing_objs = exclude_testing_objs
         self.use_supix_matching = use_supix_matching
-        self.matches_num = 0
-        self.all_batches = 0
 
         self.img_modality = DATASET_INFO[which_dataset]['MODALITY']
         self.sep = DATASET_INFO[which_dataset]['_SEP']
@@ -411,38 +409,33 @@ class SuperpixelDataset(BaseDataset):
         pseudo_label_a = slice_a["lb"]
         supix_a, supix_value_a = self.get_random_supix_mask(pseudo_label_a, supix_values)
         comp_a = np.concatenate([image_a, supix_a], axis=-1)
+        sample_a = self.create_sample(comp_a, slice_a)
 
         if self.use_supix_matching:
             image_b = slice_b["img"]
             pseudo_label_b = slice_b["lb"]
             if self.supix_matches is not None:
-                # read match from preprocessed file
                 supix_b, matching_score = self.supix_matches.get(slice_a["scan_id"])[slice_a["z_id"]].get(supix_value_a)
             else:
-                # find match on fly
                 supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
 
             if matching_score < self.supix_matching_threshold:
-                self.all_batches += 1
                 sample_b = self.create_sample(comp_a, slice_a)
             else:
                 self.matches_num += 1
-                self.all_batches += 1
                 comp_b = np.concatenate([image_b, supix_b], axis=-1)
                 sample_b = self.create_sample(comp_b, slice_b)
+            self.all_batches += 1
         else:
             sample_b = self.create_sample(comp_a, slice_a)
 
-        sample_a = self.create_sample(comp_a, slice_a)
+
 
         r = np.random.uniform()
         if r > 0.5:
             pair_buffer = [sample_a, sample_b]
         else:
             pair_buffer = [sample_b, sample_a]
-        # if self.use_supix_matching and r < 0.005:
-        #     print(
-        #         f'\n======== (estimation) num_used_matches: {self.matches_num},   num_all: {self.all_batches} ========\n')
 
         support_images = []
         support_mask = []
