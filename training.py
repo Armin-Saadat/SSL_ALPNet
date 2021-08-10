@@ -91,6 +91,7 @@ def main(_run, _config, _log):
         create_supix_matching_prep_file=_config['create_supix_matching_prep_file'],
         use_supix_matching=_config['use_supix_matching'],
         exclude_testing_objs=_config['exclude_testing_objs'],
+        root_of_supix_matches_file=_config['saving_root']
     )
 
     # dataloaders
