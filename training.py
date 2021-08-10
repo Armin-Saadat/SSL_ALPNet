@@ -44,8 +44,11 @@ def main(_run, _config, _log):
     torch.cuda.set_device(device=_config['gpu_id'])
     torch.set_num_threads(1)
 
-    path_to_load_from = './exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot/'
-    path_to_load_from += f'{_config["pre_trained_folder"]}/snapshots/{_config["pre_trained_snapshot"]}.pth'
+    if _config['use_pre_trained']:
+        path_to_load_from = '/HDD/SSL_ALPNet_models/exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot/'
+        path_to_load_from += f'{_config["pre_trained_folder"]}/snapshots/{_config["pre_trained_snapshot"]}.pth'
+    else:
+        path_to_load_from = None
 
     _log.info('###### Create model ######')
     model = FewShotSeg(pretrained_path=path_to_load_from, cfg=_config['model'])
@@ -172,6 +175,7 @@ def main(_run, _config, _log):
                 log_loss['align_loss'] = 0
 
                 print(f'step {i_iter+1}: loss: {loss}, align_loss: {align_loss},')
+                print(f'matches: {trainloader.dataset.matches_num}   all: {trainloader.dataset.all_batches}')
 
             if (i_iter + 1) % _config['save_snapshot_every'] == 0:
                 _log.info('###### Taking snapshot ######')
@@ -179,7 +183,6 @@ def main(_run, _config, _log):
                            os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
             if i_iter == 50:
                 print('------ Saving Path: ' + f'{_run.observers[0].dir}/snapshots')
-
 
             if data_name == 'C0_Superpix' or data_name == 'CHAOST2_Superpix':
                 if (i_iter + 1) % _config['max_iters_per_load'] == 0:

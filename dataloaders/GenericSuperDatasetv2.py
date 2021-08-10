@@ -17,6 +17,7 @@ from util.utils import CircularList
 from matplotlib import pyplot as plt
 
 
+
 class SuperpixelDataset(BaseDataset):
     def __init__(self, which_dataset, base_dir, idx_split, mode, transforms, scan_per_load, num_rep=2, min_fg='',
                  nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None,
@@ -43,9 +44,9 @@ class SuperpixelDataset(BaseDataset):
         self.supix_matching_threshold = supix_matching_threshold
         self.exclude_testing_objs = exclude_testing_objs
         self.use_supix_matching = use_supix_matching
+        self.matches_num = 0
+        self.all_batches = 0
 
-        self.our_idea_num = 0
-        self.paper_idea_num = 1
         self.img_modality = DATASET_INFO[which_dataset]['MODALITY']
         self.sep = DATASET_INFO[which_dataset]['_SEP']
         self.pseu_label_name = DATASET_INFO[which_dataset]['PSEU_LABEL_NAME']
@@ -95,17 +96,18 @@ class SuperpixelDataset(BaseDataset):
 
         # supix matches preprocess
         if create_supix_matching_prep_file:
-            print("\n--- start creating and saving supix matches ---")
+            print("\n--- start creating and saving supix matches ---\n")
             self.save_all_supix_matches()
         if use_supix_matching:
-            print('\n----- TRAINING MODE: SUPIX MATCHING -----')
+            print('\n----- TRAINING MODE: SUPIX MATCHING -----\n')
             print("--- trying to load supix matches ---")
             try:
-                with open('./supix_matches/supix_matches.pkl', 'rb') as f:
+                with open('/HDD/SSL_ALPNet_models/supix_matches/supix_matches.pkl', 'rb') as f:
                     self.supix_matches = pickle.load(f)
-                print("--- supix matches loaded completelty ---")
+                print("\n--- supix matches loaded completelty ---\n")
             except:
-                print('\n------ "use_supix_matching" is true but no preprocessed file is available. Will find matches on fly. ------')
+                print('\n------ "use_supix_matching" is true but no preprocessed file is available. Will find matches on fly. ------\n')
+                self.supix_matches = None
         else:
             self.supix_matches = None
 
@@ -420,9 +422,11 @@ class SuperpixelDataset(BaseDataset):
                 supix_b, matching_score = self.get_matched_supix(supix_a, pseudo_label_b)
 
             if matching_score < self.supix_matching_threshold:
-                print(self.supix_matching_threshold)
+                self.all_batches += 1
                 sample_b = self.create_sample(comp_a, slice_a)
             else:
+                self.matches_num += 1
+                self.all_batches += 1
                 comp_b = np.concatenate([image_b, supix_b], axis=-1)
                 sample_b = self.create_sample(comp_b, slice_b)
         else:
@@ -430,10 +434,13 @@ class SuperpixelDataset(BaseDataset):
 
         sample_a = self.create_sample(comp_a, slice_a)
 
-        if np.random.uniform() > 0.5:
+        r = np.random.uniform()
+        if r > 0.5:
             pair_buffer = [sample_a, sample_b]
         else:
             pair_buffer = [sample_b, sample_a]
+        if self.use_supix_matching and r < 0.005:
+            print(f'\n======== (estimation) num_used_matches: {self.matches_num},   num_all: {self.all_batches} ========\n')
 
         support_images = []
         support_mask = []
@@ -489,3 +496,4 @@ class SuperpixelDataset(BaseDataset):
             bg_mask[label == class_id] = 0
         return {'fg_mask': fg_mask,
                 'bg_mask': bg_mask}
+

@@ -62,6 +62,7 @@ def cfg():
     exclude_testing_objs = True
     pre_trained_folder = 0
     pre_trained_snapshot = 0
+    use_pre_trained = False
 
 
     ### Validation
@@ -132,6 +133,8 @@ def cfg():
 def add_observer(config, command_name, logger):
     """A hook fucntion to add observer"""
     exp_name = f'{ex.path}_{config["exp_str"]}'
-    observer = FileStorageObserver.create(os.path.join(config['path']['log_dir'], exp_name))
+
+    p = '/HDD/SSL_ALPNet_models' + os.path.join(config['path']['log_dir'], exp_name)[1:]
+    observer = FileStorageObserver.create(p)
     ex.observers.append(observer)
     return config

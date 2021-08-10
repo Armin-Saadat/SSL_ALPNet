@@ -23,12 +23,12 @@ EXCLU='[2,3]' # setting 2: excluding kidneys in training set to test generalizat
 NSTEP=100100
 DECAY=0.95
 MAX_ITER=1000 # defines the size of an epoch
-SNAPSHOT_INTERVAL=10000  # interval for saving snapshot
+SNAPSHOT_INTERVAL=5000  # interval for saving snapshot
 SEED='1234'
 
-supix_matching_threshold=0.5
-pre_trained_folder=1
-pre_trained_snapshot=25000
+supix_matching_threshold=0.6
+pre_trained_folder='None'
+pre_trained_snapshot='None'
 
 ###### Validation configs ######
 SUPP_ID='[4]' #  # using the additionally loaded scan as support
@@ -48,7 +48,7 @@ do
         mkdir $LOGDIR
     fi
 
-    python3 training.py with \
+    python3.7 training.py with \
     'modelname=dlfcn_res101' \
     'usealign=True' \
     'optim_type=sgd' \
@@ -72,9 +72,10 @@ do
     support_idx=$SUPP_ID \
     supix_matching_threshold=$supix_matching_threshold \
     'create_supix_matching_prep_file=False' \
-    'use_supix_matching=False' \
+    'use_supix_matching=True' \
     'exclude_testing_objs=True' \
     pre_trained_folder=$pre_trained_folder \
-    pre_trained_snapshot=$pre_trained_snapshot
+    pre_trained_snapshot=$pre_trained_snapshot \
+    'use_pre_trained=False'
     done
 done
