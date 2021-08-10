@@ -133,8 +133,7 @@ def cfg():
 def add_observer(config, command_name, logger):
     """A hook fucntion to add observer"""
     exp_name = f'{ex.path}_{config["exp_str"]}'
-
-    p = '/HDD/SSL_ALPNet_models' + os.path.join(config['path']['log_dir'], exp_name)[1:]
+    p = config['saving_root'] + os.path.join(config['path']['log_dir'], exp_name)[1:]
     observer = FileStorageObserver.create(p)
     ex.observers.append(observer)
     return config

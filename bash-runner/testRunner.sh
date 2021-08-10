@@ -2,9 +2,11 @@
 
 model_folder=1
 model_snapshot=25000
+reload_root='./'
 
 python3 validation.py with \
-reload_base_path='./exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot' \
+reload_root=$reload_root \
+reload_base_path='exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot' \
 model_folder=$model_folder \
 model_snapshot=$model_snapshot \
 'modelname=dlfcn_res101' \
@@ -26,5 +28,5 @@ min_fg_data=1 seed='1234' \
 save_snapshot_every=25000 \
 superpix_scale='MIDDLE' \
 lr_step_gamma=0.95 \
-path.log_dir='./exps' \
+# path.log_dir='./exps' \
 support_idx='[4]'
