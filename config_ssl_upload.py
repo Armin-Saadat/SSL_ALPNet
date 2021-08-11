@@ -118,7 +118,7 @@ def cfg():
         + [f'sets_{label_sets}_{task["n_shots"]}shot'])
 
     path = {
-        'log_dir': './runs',
+        'log_dir': './exps',
         'SABS':{'data_dir': "./data/SABS/sabs_CT_normalized"
                 },
         'C0':{'data_dir': "feed your dataset path here"
