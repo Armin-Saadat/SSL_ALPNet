@@ -1,8 +1,8 @@
-model_folder=1
-model_snapshot=25000
+model_folder="default"
+model_snapshot=100000
 reload_root='/HDD/SSL_ALPNet_models/'
 
-python3 validation.py with \
+python3.7 ../validation.py with \
 reload_root=$reload_root \
 reload_base_path='exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot' \
 model_folder=$model_folder \
