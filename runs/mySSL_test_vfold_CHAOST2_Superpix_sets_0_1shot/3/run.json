@@ -1,0 +1,258 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/khalili/SSL_ALPNET",
+    "dependencies": [
+      "numpy==1.21.1",
+      "sacred==0.8.2"
+    ],
+    "mainfile": "config_ssl_upload.py",
+    "name": "mySSL",
+    "repositories": [
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      },
+      {
+        "commit": "2ca4687337dd952c96964b3dffbc6c31e85c955b",
+        "dirty": true,
+        "url": "https://github.com/Armin-Saadat/SSL_ALPNet.git"
+      }
+    ],
+    "sources": [
+      [
+        "config_ssl_upload.py",
+        "_sources/config_ssl_upload_5c8fc9202ea6a2d2e3c847bf64919100.py"
+      ],
+      [
+        "dataloaders/GenericSuperDatasetv2.py",
+        "_sources/GenericSuperDatasetv2_8072f760ac6b5d6c7c024b99766e3b07.py"
+      ],
+      [
+        "dataloaders/ManualAnnoDatasetv2.py",
+        "_sources/ManualAnnoDatasetv2_5a46c6c1fc8a79aae5e122f65db5d21a.py"
+      ],
+      [
+        "dataloaders/__init__.py",
+        "_sources/__init___d41d8cd98f00b204e9800998ecf8427e.py"
+      ],
+      [
+        "dataloaders/augutils.py",
+        "_sources/augutils_df81890da77b3978cf976f88a1a439b9.py"
+      ],
+      [
+        "dataloaders/common.py",
+        "_sources/common_7da5268ec9e076f877e0d8399d2b0a17.py"
+      ],
+      [
+        "dataloaders/dataset_utils.py",
+        "_sources/dataset_utils_601af774acc5165bde7905bdd1477bcd.py"
+      ],
+      [
+        "dataloaders/dev_customized_med.py",
+        "_sources/dev_customized_med_b121ddf227cb119f4438291ccdf3b3cb.py"
+      ],
+      [
+        "dataloaders/image_transforms.py",
+        "_sources/image_transforms_79b82e415da3e6d499114e4c58eed629.py"
+      ],
+      [
+        "dataloaders/niftiio.py",
+        "_sources/niftiio_e33c7c40ea004f11e33e944b4990f682.py"
+      ],
+      [
+        "models/__init__.py",
+        "_sources/__init___d41d8cd98f00b204e9800998ecf8427e.py"
+      ],
+      [
+        "models/alpmodule.py",
+        "_sources/alpmodule_78d3058adde7655d14e450502b8262eb.py"
+      ],
+      [
+        "models/grid_proto_fewshot.py",
+        "_sources/grid_proto_fewshot_885d79d93b7f407ef0d0fe7a7779ef46.py"
+      ],
+      [
+        "training.py",
+        "_sources/training_0dbcc3277230c2362abaa0b88e1b5f1c.py"
+      ],
+      [
+        "util/__init__.py",
+        "_sources/__init___1be5ff7fc5435a76323dee4adef2baac.py"
+      ],
+      [
+        "util/metric.py",
+        "_sources/metric_26d80ce4e7e6d31a52d809dfebd9a3d8.py"
+      ],
+      [
+        "util/utils.py",
+        "_sources/utils_02d63e87af756e9c2d740e9b6fbcc638.py"
+      ],
+      [
+        "validation.py",
+        "_sources/validation_65601619d2f756bb688fa38750572efd.py"
+      ]
+    ]
+  },
+  "heartbeat": "2021-08-11T09:34:49.260348",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz",
+    "gpus": {
+      "driver_version": "430.64",
+      "gpus": [
+        {
+          "model": "GeForce GTX 1080 Ti",
+          "persistence_mode": false,
+          "total_memory": 11178
+        }
+      ]
+    },
+    "hostname": "mll-i7",
+    "os": [
+      "Linux",
+      "Linux-4.4.0-210-generic-x86_64-with-Ubuntu-16.04-xenial"
+    ],
+    "python_version": "3.7.10"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat-interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print-config": false,
+      "--priority": null,
+      "--queue": false,
+      "--s3": null,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [
+        "reload_root=/HDD/SSL_ALPNet_models/",
+        "reload_base_path=exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot",
+        "model_folder=no_filtering",
+        "model_snapshot=100000",
+        "modelname=dlfcn_res101",
+        "usealign=True",
+        "optim_type=sgd",
+        "num_workers=4",
+        "scan_per_load=-1",
+        "label_sets=0",
+        "use_wce=True",
+        "exp_prefix=test_vfold",
+        "clsname=grid_proto",
+        "n_steps=4000",
+        "exclude_cls_list=[2,3]",
+        "eval_fold=0",
+        "dataset=CHAOST2_Superpix",
+        "proto_grid_size=8",
+        "max_iters_per_load=1000",
+        "min_fg_data=1",
+        "seed=1234",
+        "save_snapshot_every=25000",
+        "superpix_scale=MIDDLE",
+        "lr_step_gamma=0.95"
+      ],
+      "help": false,
+      "with": true
+    }
+  },
+  "resources": [],
+  "result": 1,
+  "start_time": "2021-08-11T09:34:03.697440",
+  "status": "COMPLETED",
+  "stop_time": "2021-08-11T09:34:49.260069"
+}
