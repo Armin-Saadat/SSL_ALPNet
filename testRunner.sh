@@ -32,4 +32,6 @@ do
   lr_step_gamma=0.95 \
   path.log_dir='./exps/myexperiments_MIDDLE_0' \
   support_idx='[4]'
+
+  printf "\n ====== snapshot ${SNAP} completed ======\n"
 done
