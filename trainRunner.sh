@@ -40,7 +40,7 @@ do
     do
     PREFIX="train_${DATASET}_lbgroup${LABEL_SETS}_scale_${SUPERPIX_SCALE}_vfold${EVAL_FOLD}"
     echo $PREFIX
-    LOGDIR="./exps/${CPT}_${SUPERPIX_SCALE}_${LABEL_SETS}"
+    LOGDIR="${saving_root}exps/${CPT}_${SUPERPIX_SCALE}_${LABEL_SETS}"
 
     if [ ! -d $LOGDIR ]
     then
