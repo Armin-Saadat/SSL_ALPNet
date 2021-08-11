@@ -1,5 +1,3 @@
-%%shell
-
 model_folder=1
 model_snapshot=25000
 reload_root='/HDD/SSL_ALPNet_models/'
