@@ -1,9 +1,9 @@
-model_folder="no_filtering"
-model_snapshot=100000
+model_folder="default"
+model_snapshot=60000
 reload_root='/HDD/SSL_ALPNet_models/'
 saving_root='/HDD/SSL_ALPNet_models/'
 
-python3.7 ../validation.py with \
+python3.7 validation.py with \
 reload_root=$reload_root \
 saving_root=$saving_root \
 reload_base_path='exps/myexperiments_MIDDLE_0/mySSL_train_CHAOST2_Superpix_lbgroup0_scale_MIDDLE_vfold0_CHAOST2_Superpix_sets_0_1shot' \
@@ -28,5 +28,5 @@ min_fg_data=1 seed='1234' \
 save_snapshot_every=25000 \
 superpix_scale='MIDDLE' \
 lr_step_gamma=0.95 \
-# path.log_dir='./exps' \
+path.log_dir='./exps/myexperiments_MIDDLE_0' \
 support_idx='[4]'

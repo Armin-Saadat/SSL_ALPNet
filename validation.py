@@ -28,14 +28,11 @@ os.environ['TORCH_HOME'] = "./pretrained_model"
 def main(_run, _config, _log):
     if _run.observers:
         os.makedirs(f'{_run.observers[0].dir}/interm_preds', exist_ok=True)
-        print('EEE ', _run.experiment_info['sources'])
-        for i, (source_file, _) in enumerate(_run.experiment_info['sources']):
-            # if '/' in source_file:
-            #     source_file = source_file.split('/')[1]
+        print("check:", _run.observers[0])
+        for source_file, _ in _run.experiment_info['sources']:
             os.makedirs(os.path.dirname(f'{_run.observers[0].dir}/source/{source_file}'),
                         exist_ok=True)
-            print('HERE: ', source_file, f'source/{source_file}')
-            _run.observers[0].save_file('/home/khalili/SSL_ALPNET/' + source_file, f'source/{source_file}')
+            _run.observers[0].save_file(source_file, f'source/{source_file}')
         shutil.rmtree(f'{_run.observers[0].basedir}/_sources')
 
     cudnn.enabled = True

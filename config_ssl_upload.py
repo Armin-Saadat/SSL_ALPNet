@@ -21,11 +21,10 @@ sacred.SETTINGS.CAPTURE_MODE = 'no'
 ex = Experiment('mySSL')
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
-source_folders = ['.', '../dataloaders', '../models', '../util']
+source_folders = ['.', './dataloaders', './models', './util']
 sources_to_save = list(itertools.chain.from_iterable(
     [glob.glob(f'{folder}/*.py') for folder in source_folders]))
 for source_file in sources_to_save:
-    print('ADDED: ', source_file)
     ex.add_source_file(source_file)
 
 @ex.config
@@ -119,7 +118,7 @@ def cfg():
         + [f'sets_{label_sets}_{task["n_shots"]}shot'])
 
     path = {
-        'log_dir': './runs',
+        'log_dir': './exps',
         'SABS':{'data_dir': "./data/SABS/sabs_CT_normalized"
                 },
         'C0':{'data_dir': "feed your dataset path here"

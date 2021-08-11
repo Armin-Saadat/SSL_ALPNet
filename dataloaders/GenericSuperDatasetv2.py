@@ -422,20 +422,18 @@ class SuperpixelDataset(BaseDataset):
             if matching_score < self.supix_matching_threshold:
                 sample_b = self.create_sample(comp_a, slice_a)
             else:
-                self.matches_num += 1
                 comp_b = np.concatenate([image_b, supix_b], axis=-1)
                 sample_b = self.create_sample(comp_b, slice_b)
-            self.all_batches += 1
         else:
             sample_b = self.create_sample(comp_a, slice_a)
 
 
 
-        r = np.random.uniform()
-        if r > 0.5:
-            pair_buffer = [sample_a, sample_b]
-        else:
-            pair_buffer = [sample_b, sample_a]
+        # r = np.random.uniform()
+        # if r > 0.5:
+        pair_buffer = [sample_a, sample_b]
+        # else:
+        #     pair_buffer = [sample_b, sample_a]
 
         support_images = []
         support_mask = []
