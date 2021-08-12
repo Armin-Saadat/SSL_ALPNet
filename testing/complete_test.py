@@ -15,7 +15,7 @@ def read_complete_test(root_tests_path='/HDD/SSL_ALPNet_models/', model_name='NO
     if model_name == 'NO_NAME':
         warnings.warn("You didn't specified model_name!!")
 
-    tests_path = root_tests_path + "exps/myexperiments_MIDDLE_0/" + model_name + 'test_results'
+    tests_path = root_tests_path + "exps/myexperiments_MIDDLE_0/mySSL_test_vfold_CHAOST2_Superpix_sets_0_1shot"
     all_metrics = []
     all_mean_dice = []
     all_mean_prec = []
@@ -45,4 +45,4 @@ def read_complete_test(root_tests_path='/HDD/SSL_ALPNet_models/', model_name='NO
     df.to_csv(os.path.join(root_tests_path, model_name, f'{model_name}.csv'))
 
 
-read_complete_test(root_tests_path="/HDD/SSL_ALPNet_models/", model_name='rand_pair_default')
+read_complete_test(root_tests_path="/Users/kian/Desktop/tests", model_name='NO_NAME')
