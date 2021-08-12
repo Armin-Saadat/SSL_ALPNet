@@ -1,9 +1,9 @@
-model_folder="default"
+model_folder="supix_thresh_60"
 #model_snapshot=60000
 reload_root='/HDD/SSL_ALPNet_models/'
 saving_root='/HDD/SSL_ALPNet_models/'
 
-for SNAP in `seq 5000 5000 5000`
+for SNAP in `seq 5000 5000 100000`
 do
   python3.7 validation.py with \
   reload_root=$reload_root \
