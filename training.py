@@ -172,10 +172,10 @@ def main(_run, _config, _log):
 
                 print(f'step {i_iter + 1}: loss: {loss}, align_loss: {align_loss},')
 
-            if (i_iter + 1) % _config['save_snapshot_every'] == 0:
+            if (i_iter) % _config['save_snapshot_every'] == 0:
                 _log.info('###### Taking snapshot ######')
                 torch.save(model.state_dict(),
-                           os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
+                           os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter}.pth'))
             if i_iter == 50:
                 print('------ Saving Path: ' + f'{_run.observers[0].dir}/snapshots')
 

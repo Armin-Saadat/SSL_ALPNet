@@ -428,8 +428,6 @@ class SuperpixelDataset(BaseDataset):
         else:
             sample_b = self.create_sample(comp_a, slice_a)
 
-
-
         # r = np.random.uniform()
         # if r > 0.5:
         pair_buffer = [sample_a, sample_b]
@@ -470,9 +468,6 @@ class SuperpixelDataset(BaseDataset):
             return self.fix_length
         else:
             return len(self.actual_dataset)
-
-    def print_augment_ratio(self):
-        return self.our_idea_num, self.paper_idea_num
 
     @staticmethod
     def getMaskMedImg(label, class_id, class_ids):
