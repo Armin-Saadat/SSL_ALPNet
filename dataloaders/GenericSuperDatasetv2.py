@@ -21,7 +21,7 @@ class SuperpixelDataset(BaseDataset):
     def __init__(self, which_dataset, base_dir, idx_split, mode, transforms, scan_per_load, num_rep=2, min_fg='',
                  nsup=1, fix_length=None, tile_z_dim=3, exclude_list=[], superpix_scale='SMALL', figPath=None,
                  supix_matching_threshold=0.7, create_supix_matching_prep_file=False, use_supix_matching=False,
-                 exclude_testing_objs=True, root_of_supix_matches_file='/HDD/SSL_ALPNet_models', **kwargs):
+                 exclude_testing_objs=True, root_of_supix_matches_file='/HDD/SSL_ALPNet_models/', **kwargs):
         """
         Pseudolabel dataset
         Args:
