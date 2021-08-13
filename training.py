@@ -23,7 +23,7 @@ from config_ssl_upload import ex
 os.environ['TORCH_HOME'] = "./pretrained_model"
 
 
-@ex.automain
+@e.automain
 def main(_run, _config, _log):
     if _run.observers:
         os.makedirs(f'{_run.observers[0].dir}/snapshots', exist_ok=True)
@@ -143,8 +143,11 @@ def main(_run, _config, _log):
             try:
                 query_pred, align_loss, debug_vis, assign_mats = model(support_images, support_fg_mask, support_bg_mask,
                                                                        query_images, isval=False, val_wsize=None)
-            except:
+            except Exception as e:
                 print('Faulty batch detected, skip')
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                message = template.format(type(e).__name__, e.args)
+                print(message)
                 continue
 
             query_loss = criterion(query_pred, query_labels)
@@ -179,9 +182,9 @@ def main(_run, _config, _log):
             if i_iter == 50:
                 print('------ Saving Path: ' + f'{_run.observers[0].dir}/snapshots')
 
-            if i_iter == 0:
+            if i_iter == 1:
                 _log.info('###### Taking initial snapshot ######')
-                torch.save(model.state_dict(), os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter}.pth'))
+                torch.save(model.state_dict(), os.path.join(f'{_run.observers[0].dir}/snapshots', f'{0}.pth'))
 
             if data_name == 'C0_Superpix' or data_name == 'CHAOST2_Superpix':
                 if (i_iter + 1) % _config['max_iters_per_load'] == 0:

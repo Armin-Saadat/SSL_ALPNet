@@ -77,14 +77,14 @@ class FewShotSeg(nn.Module):
         n_shots = len(supp_imgs[0])
         n_queries = len(qry_imgs)
 
-        assert n_ways == 1, "Multi-shot has not been implemented yet"  # NOTE: actual shot in support goes in batch dimension
+        assert n_ways == 1, "Multi-shot has not been implemented yet."  # NOTE: actual shot in support goes in batch dimension
         assert n_queries == 1
 
         sup_bsize = supp_imgs[0][0].shape[0]
         img_size = supp_imgs[0][0].shape[-2:]
         qry_bsize = qry_imgs[0].shape[0]
 
-        assert sup_bsize == qry_bsize == 1
+        assert sup_bsize == qry_bsize == 1, "batch_size must be one."
 
         imgs_concat = torch.cat([torch.cat(way, dim=0) for way in supp_imgs]
                                 + [torch.cat(qry_imgs, dim=0), ], dim=0)
