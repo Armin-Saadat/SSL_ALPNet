@@ -428,11 +428,10 @@ class SuperpixelDataset(BaseDataset):
         else:
             sample_b = self.create_sample(comp_a, slice_a)
 
-        # r = np.random.uniform()
-        # if r > 0.5:
-        pair_buffer = [sample_a, sample_b]
-        # else:
-        #     pair_buffer = [sample_b, sample_a]
+        if index % 2 == 0:
+            pair_buffer = [sample_a, sample_b]
+        else:
+            pair_buffer = [sample_b, sample_a]
 
         support_images = []
         support_mask = []
