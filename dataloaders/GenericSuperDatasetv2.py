@@ -32,7 +32,7 @@ class SuperpixelDataset(BaseDataset):
             nsup:               number of scans used as support. currently idle for superpixel dataset
             transforms:         data transform (augmentation) function
             scan_per_load:      loading a portion of the entire dataset, in case that the dataset is too large to fit into the memory. Set to -1 if loading the entire dataset at one time
-            num_rep:            Number of augmentation applied for a same pseudolabel
+            num_rep:            Number of augmentation applied for a same pseudo label
             tile_z_dim:         number of identical slices to tile along channel dimension, for fitting 2D single-channel medical images into off-the-shelf networks designed for RGB natural images
             fix_length:         fix the length of dataset
             exclude_list:       Labels to be excluded
@@ -44,6 +44,7 @@ class SuperpixelDataset(BaseDataset):
         self.supix_matching_threshold = supix_matching_threshold
         self.exclude_testing_objs = exclude_testing_objs
         self.use_supix_matching = use_supix_matching
+        self.root_of_supix_matches_file = root_of_supix_matches_file
 
         self.img_modality = DATASET_INFO[which_dataset]['MODALITY']
         self.sep = DATASET_INFO[which_dataset]['_SEP']
@@ -209,7 +210,7 @@ class SuperpixelDataset(BaseDataset):
                 supix_matches.get(scan_id)[ii - 1] = self.get_matches(lb_a, lb[..., ii: ii + 1])
                 lb_a = lb[..., ii: ii + 1]
 
-        with open('./supix_matches/supix_matches.pkl', 'wb') as f:
+        with open(self.root_of_supix_matches_file + 'supix_matches/supix_matches.pkl', 'wb') as f:
             pickle.dump(supix_matches, f)
 
     def read_dataset(self):
